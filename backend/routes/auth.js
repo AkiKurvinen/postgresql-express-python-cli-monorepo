@@ -80,10 +80,10 @@ router.post('/register', async (req, res) => {
     const saltRounds = 10;
     const hashedPassword = await bcrypt.hash(password, saltRounds);
 
-    // Insert user into DB
-    const [userid] = await db('users').insert({ username, password: hashedPassword });
-    // Get the created user
-    const user = await db('users').where({ userid }).first();
+    // Insert user into DB and return the inserted row (PostgreSQL)
+    const [user] = await db('users')
+      .insert({ username, password: hashedPassword })
+      .returning(['userid', 'username']);
 
     // Generate JWT token
     const token = jwt.sign(
