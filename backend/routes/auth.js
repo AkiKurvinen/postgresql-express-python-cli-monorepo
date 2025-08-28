@@ -6,8 +6,9 @@ const router = express.Router();
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
 
-// In-memory user storage (use a database in production)
-const users = [];
+
+// Use SQLite via Knex
+const db = require('../db');
 
 // JWT Middleware
 const authenticateToken = (req, res, next) => {
@@ -68,8 +69,9 @@ router.post('/register', async (req, res) => {
       return res.status(400).json({ error: 'Username and password are required' });
     }
 
-    // Check if user already exists
-    const existingUser = users.find(user => user.username === username);
+
+    // Check if user already exists in DB
+    const existingUser = await db('users').where({ username }).first();
     if (existingUser) {
       return res.status(400).json({ error: 'User already exists' });
     }
@@ -78,18 +80,14 @@ router.post('/register', async (req, res) => {
     const saltRounds = 10;
     const hashedPassword = await bcrypt.hash(password, saltRounds);
 
-    // Create user
-    const user = {
-      id: users.length + 1,
-      username,
-      password: hashedPassword
-    };
-
-    users.push(user);
+    // Insert user into DB
+    const [userid] = await db('users').insert({ username, password: hashedPassword });
+    // Get the created user
+    const user = await db('users').where({ userid }).first();
 
     // Generate JWT token
     const token = jwt.sign(
-      { id: user.id, username: user.username },
+      { id: user.userid, username: user.username },
       JWT_SECRET,
       { expiresIn: '24h' }
     );
@@ -98,7 +96,7 @@ router.post('/register', async (req, res) => {
       message: 'User registered successfully',
       token,
       user: {
-        id: user.id,
+        id: user.userid,
         username: user.username
       }
     });
@@ -145,11 +143,13 @@ router.post('/login', async (req, res) => {
       return res.status(400).json({ error: 'Username and password are required' });
     }
 
-    // Find user
-    const user = users.find(user => user.username === username);
+
+    // Find user in DB
+    const user = await db('users').where({ username }).first();
     if (!user) {
       return res.status(400).json({ error: 'Invalid credentials' });
     }
+
 
     // Check password
     const isPasswordValid = await bcrypt.compare(password, user.password);
@@ -159,7 +159,7 @@ router.post('/login', async (req, res) => {
 
     // Generate JWT token
     const token = jwt.sign(
-      { id: user.id, username: user.username },
+      { id: user.userid, username: user.username },
       JWT_SECRET,
       { expiresIn: '24h' }
     );
@@ -168,7 +168,7 @@ router.post('/login', async (req, res) => {
       message: 'Login successful',
       token,
       user: {
-        id: user.id,
+        id: user.userid,
         username: user.username
       }
     });
