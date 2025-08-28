@@ -21,6 +21,9 @@ python -m venv .venv
 pip install -r requirements.txt
 ```
 
+**Set environment variables**  
+Create .env file based on env-template 
+
 ## Run Application
 ```bash
 python main.py status

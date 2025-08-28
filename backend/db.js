@@ -1,5 +1,5 @@
 const knex = require('knex');
-const knexConfig = require('./knexfile');
+const knexConfig = require('../database/knexfile');
 
 // Use development config for now
 const db = knex(knexConfig.development);
