@@ -73,9 +73,9 @@ router.post('/register', async (req, res) => {
       return res.status(400).json({ error: 'Username and password are required' });
     }
 
-    // Validate role if provided
+    // Accept role as 'admin' or 'client' (case-insensitive), default to 'client'
     let userRole = 'client';
-    if (role && typeof role === 'string' && role.toLowerCase() === 'admin') {
+    if (typeof role === 'string' && role.toLowerCase() === 'admin') {
       userRole = 'admin';
     }
 
@@ -167,9 +167,9 @@ router.post('/login', async (req, res) => {
       return res.status(400).json({ error: 'Invalid credentials' });
     }
 
-    // Generate JWT token
+    // Generate JWT token (include role)
     const token = jwt.sign(
-      { id: user.userid, username: user.username },
+      { id: user.userid, username: user.username, role: user.role },
       JWT_SECRET,
       { expiresIn: '24h' }
     );
@@ -179,7 +179,8 @@ router.post('/login', async (req, res) => {
       token,
       user: {
         id: user.userid,
-        username: user.username
+        username: user.username,
+        role: user.role
       }
     });
   } catch (error) {
@@ -225,5 +226,48 @@ router.post('/logout', (req, res) => {
   // For JWT, logout is handled client-side by deleting the token.
   res.json({ message: 'Logout successful. Please delete your token on the client.' });
 });
-
+/**
+ * @swagger
+ * /users/{username}:
+ *   delete:
+ *     summary: Delete a user by username
+ *     tags:
+ *       - Auth
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: username
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: User deleted successfully
+ *       401:
+ *         description: Access token required
+ *       403:
+ *         description: Invalid or expired token
+ *       404:
+ *         description: User not found
+ *       500:
+ *         description: Internal server error
+ */
+router.delete('/users/:username', authenticateToken, async (req, res) => {
+  try {
+    const { username } = req.params;
+    // Only allow admin or self-delete
+    if (req.user.role !== 'admin' && req.user.username !== username) {
+      return res.status(403).json({ error: 'Forbidden: insufficient rights' });
+    }
+    const deleted = await db('users').where({ username }).del();
+    if (deleted) {
+      res.json({ message: 'User deleted successfully' });
+    } else {
+      res.status(404).json({ error: 'User not found' });
+    }
+  } catch (error) {
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
 module.exports = router;
