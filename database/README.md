@@ -1,15 +1,42 @@
 # PostgreSQL
 
 ## Installation
-
+*A. Container & pgAdmin*  
 ```bash
 cd database
 docker-compose up -d
 npx knex migrate:latest
 npx knex seed:run
 ```
-## Browse database in pgAdmin
 
+*B. sqlite*
+```bash
+npm install
+npm install sqlite3
+npx knex init
+npx knex migrate:latest
+npx knex seed:run
+```
+Edit knwxfile.js
+```
+  development: {
+    client: 'sqlite3',
+    connection: {
+      filename: '../database/dev.sqlite3'
+    }
+  },
+```
+
+## Browse database in SQLite
+*A. Use SQLite VS Code extension*
+```
+Ctrl + Shift + P  
+>Explorer: Focus on SQLite Explorer View  
+Choose table and click arrow to send SELECT query  
+```
+*B. Install SQLite from sqlite.org and use command line*
+
+## Browse database in pgAdmin
 - Open your browser and go to http://localhost:5050/
 - Log in with the default credentials:
   - See email and password in [docker-compose.yml](docker-compose.yml)
@@ -33,7 +60,6 @@ postgres: This is a default database that PostgreSQL always creates for administ
 
 
 ## SQL queries
-
 ```sql
 SELECT * FROM users;
 DELETE FROM users WHERE username = 'admin'; 
