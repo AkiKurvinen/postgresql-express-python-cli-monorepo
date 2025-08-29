@@ -11,6 +11,7 @@ npx knex seed:run
 
 *B. sqlite*
 ```bash
+cd database
 npm install
 npm install sqlite3
 npx knex init
@@ -31,6 +32,7 @@ Edit knexfile.js
 *A. Use SQLite VS Code extension*
 ```
 Ctrl + Shift + P  
+>SQLite: Open database
 >Explorer: Focus on SQLite Explorer View  
 Choose table and click arrow to send SELECT query  
 ```
