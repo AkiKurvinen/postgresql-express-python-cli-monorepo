@@ -52,6 +52,10 @@ const authenticateToken = (req, res, next) => {
  *                 type: string
  *               password:
  *                 type: string
+ *               role:
+ *                 type: string
+ *                 description: Optional user role, defaults to 'client'. Can be 'client' or 'admin'.
+ *                 enum: [client, admin]
  *     responses:
  *       201:
  *         description: User registered successfully
@@ -62,13 +66,18 @@ const authenticateToken = (req, res, next) => {
  */
 router.post('/register', async (req, res) => {
   try {
-    const { username, password } = req.body;
+    const { username, password, role } = req.body;
 
     // Basic validation
     if (!username || !password) {
       return res.status(400).json({ error: 'Username and password are required' });
     }
 
+    // Validate role if provided
+    let userRole = 'client';
+    if (role && typeof role === 'string' && role.toLowerCase() === 'admin') {
+      userRole = 'admin';
+    }
 
     // Check if user already exists in DB
     const existingUser = await db('users').where({ username }).first();
@@ -82,12 +91,12 @@ router.post('/register', async (req, res) => {
 
     // Insert user into DB and return the inserted row (PostgreSQL)
     const [user] = await db('users')
-      .insert({ username, password: hashedPassword })
-      .returning(['userid', 'username']);
+      .insert({ username, password: hashedPassword, role: userRole })
+      .returning(['userid', 'username', 'role']);
 
     // Generate JWT token
     const token = jwt.sign(
-      { id: user.userid, username: user.username },
+      { id: user.userid, username: user.username, role: user.role },
       JWT_SECRET,
       { expiresIn: '24h' }
     );
@@ -97,7 +106,8 @@ router.post('/register', async (req, res) => {
       token,
       user: {
         id: user.userid,
-        username: user.username
+        username: user.username,
+        role: user.role
       }
     });
   } catch (error) {

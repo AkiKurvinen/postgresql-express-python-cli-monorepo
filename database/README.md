@@ -1,4 +1,4 @@
-# PostgreSQL
+# Database
 
 ## Installation
 *A. Container & pgAdmin*  
@@ -17,7 +17,7 @@ npx knex init
 npx knex migrate:latest
 npx knex seed:run
 ```
-Edit knwxfile.js
+Edit knexfile.js
 ```
   development: {
     client: 'sqlite3',
@@ -57,7 +57,6 @@ Choose table and click arrow to send SELECT query
 mydatabase: This is the custom database you defined in your Docker Compose file with POSTGRES_DB: mydatabase. It’s meant for your application’s data.
 
 postgres: This is a default database that PostgreSQL always creates for administrative purposes. It’s used internally and for admin tasks.
-
 
 ## SQL queries
 ```sql

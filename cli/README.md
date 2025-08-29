@@ -5,13 +5,15 @@
 **Create and Activate Virtual Environment**
 
 A. *Windows (Git Bash)*
-```
+```bash
+cd cli
 python -m venv .venv
 source .venv/Scripts/activate
 ```
 
 B. *Windows (cmd or PowerShell)*
-```
+```bash
+cd cli
 python -m venv .venv
 .venv\Scripts\activate
 ```
