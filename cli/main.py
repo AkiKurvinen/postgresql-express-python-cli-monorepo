@@ -143,6 +143,11 @@ def delete_user(username: str):
         response = session.delete(f"{BASE_URL}/users/{username}")
         if response.status_code == 200:
             typer.echo(f"✅ User '{username}' deleted successfully.")
+            # If user deleted himself, call logout
+            current_username = os.getenv("USER_NAME")
+            if current_username and username == current_username:
+                typer.echo("You deleted your own account. Logging out...")
+                logout()
         else:
             try:
                 error = response.json().get('error', response.text)

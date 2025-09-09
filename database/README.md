@@ -4,6 +4,7 @@
 *A. Container & pgAdmin*  
 ```bash
 cd database
+npm install
 docker-compose up -d
 npx knex migrate:latest
 npx knex seed:run
