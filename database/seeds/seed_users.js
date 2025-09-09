@@ -11,9 +11,9 @@ exports.seed = async function (knex) {
   await knex('users').del();
 
   const users = [
-    { username: 'alice', password: 'password123' },
-    { username: 'bob', password: 'securepass' },
-    { username: 'charlie', password: 'qwerty' }
+    { username: 'alice', password: 'password123', role: 'admin' },
+    { username: 'bob', password: 'securepass', role: 'client' },
+    { username: 'charlie', password: 'qwerty', role: 'client' }
   ];
 
   // Hash passwords
