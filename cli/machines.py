@@ -1,10 +1,12 @@
 from typing import Optional
 import typer
+
 machines_app = typer.Typer()
 from utils import BASE_URL, get_session_with_auth
 
+
 # Machines command group
-@machines_app.command('get')
+@machines_app.command("get")
 def machines(user_id: int):
     """Get all machines for a user id (authenticated)"""
     session, token = get_session_with_auth()
@@ -19,19 +21,22 @@ def machines(user_id: int):
             if machines:
                 typer.echo(f"Machines for user {user_id}:")
                 for m in machines:
-                    typer.echo(f"- {m['id']}: {m['name']} (Registered: {m['registered_date']})")
+                    typer.echo(
+                        f"- {m['id']}: {m['name']} (Registered: {m['registered_date']})"
+                    )
             else:
                 typer.echo(f"No machines found for user {user_id}.")
         else:
             try:
-                error = response.json().get('error', response.text)
+                error = response.json().get("error", response.text)
             except Exception:
                 error = response.text
             typer.echo(f"❌ Failed to fetch machines: {error}", err=True)
     except Exception as e:
         typer.echo(f"❌ Error: {e}", err=True)
 
-@machines_app.command('add')
+
+@machines_app.command("add")
 def add_machine(name: str, user_id: int):
     """Add a new machine for a user"""
     session, token = get_session_with_auth()
@@ -43,10 +48,12 @@ def add_machine(name: str, user_id: int):
         response = session.post(f"{BASE_URL}/machines", json=payload)
         if response.status_code == 201:
             machine = response.json().get("machine")
-            typer.echo(f"✅ Machine '{name}' added for user {user_id}. ID: {machine.get('id')}")
+            typer.echo(
+                f"✅ Machine '{name}' added for user {user_id}. ID: {machine.get('id')}"
+            )
         else:
             try:
-                error = response.json().get('error', response.text)
+                error = response.json().get("error", response.text)
             except Exception:
                 error = response.text
             typer.echo(f"❌ Failed to add machine: {error}", err=True)

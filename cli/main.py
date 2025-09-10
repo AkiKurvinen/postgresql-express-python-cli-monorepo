@@ -3,6 +3,7 @@ import typer
 import os
 
 from dotenv import load_dotenv
+
 load_dotenv()
 
 from utils import BASE_URL, TOKEN_FILE, get_session_with_auth, save_token
@@ -10,6 +11,7 @@ from users import users_app
 from machines import machines_app
 
 app = typer.Typer()
+
 
 # Basic commands
 @app.command()
@@ -24,6 +26,8 @@ def status():
             typer.echo(f"❌ Status check failed: {response.status_code}", err=True)
     except Exception as e:
         typer.echo(f"❌ Error: {e}", err=True)
+
+
 @app.command()
 def login():
     """Login with username and password from .env"""
@@ -33,11 +37,10 @@ def login():
     if not username or not password:
         typer.echo("❌ USER_NAME or PASSWORD not set in .env", err=True)
         raise typer.Exit(1)
-    typer.echo(f'{BASE_URL}/login')
+    typer.echo(f"{BASE_URL}/login")
     try:
         response = session.post(
-            f"{BASE_URL}/login",
-            json={"username": username, "password": password}
+            f"{BASE_URL}/login", json={"username": username, "password": password}
         )
         if response.status_code == 200:
             data = response.json()
@@ -52,22 +55,25 @@ def login():
     except Exception as e:
         typer.echo(f"❌ Login error: {e}", err=True)
 
+
 @app.command()
 def profile():
     """Get user profile info from token"""
     session, token = get_session_with_auth()
-    
+
     if not token:
         typer.echo("❌ Not logged in. Please run 'login' first.", err=True)
         raise typer.Exit(1)
-    
+
     try:
         response = session.get(f"{BASE_URL}/profile")
         if response.status_code == 200:
             profile = response.json()
             typer.echo(f"Name: {profile.get('user')}")
         else:
-            typer.echo(f"❌typer.echo('try login') Failed: {response.status_code}", err=True)
+            typer.echo(
+                f"❌typer.echo('try login') Failed: {response.status_code}", err=True
+            )
     except Exception as e:
         typer.echo(f"❌ Error: {e}", err=True)
 
@@ -89,10 +95,13 @@ def logout():
             typer.echo(f"❌ Logout failed: {response.status_code}", err=True)
     except Exception as e:
         typer.echo(f"❌ Logout error: {e}", err=True)
-        
+
+
 # Add sub apps
 app.add_typer(users_app, name="users", help="User management commands (add, del)")
-app.add_typer(machines_app, name="machines", help="Machine management commands (get, add)")
+app.add_typer(
+    machines_app, name="machines", help="Machine management commands (get, add)"
+)
 
 if __name__ == "__main__":
     app(prog_name="main.py")
