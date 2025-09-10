@@ -8,6 +8,7 @@ const swaggerUi = require('swagger-ui-express');
 const statusRoute = require('./status');
 const authRoute = require('./auth');
 const userRoutes = require('./user');
+const machineRoutes = require('./machine');
 
 // Swagger configuration
 
@@ -39,6 +40,7 @@ const swaggerOptions = {
 		path.join(__dirname, 'auth.js'),
 		path.join(__dirname, 'user.js'),
 		path.join(__dirname, 'health.js'),
+		path.join(__dirname, 'machine.js'),
 		path.join(__filename)
 	],
 };
@@ -51,6 +53,7 @@ router.use(express.json());
 router.use('/status', statusRoute);
 router.use('/', userRoutes);
 router.use('/', authRoute);
+router.use('/', machineRoutes);
 
 // Root route
 router.get('/', (req, res) => {

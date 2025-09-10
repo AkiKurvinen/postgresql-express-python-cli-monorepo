@@ -1,6 +1,8 @@
 const express = require('express');
 const router = express.Router();
-const { authenticateToken } = require('./auth'); 
+const db = require('../db');
+const bcrypt = require('bcrypt');
+const { authenticateToken } = require('./auth');
 /**
  * @swagger
  * /register:
@@ -28,10 +30,31 @@ const { authenticateToken } = require('./auth');
  *               role:
  *                 type: string
  *                 description: Optional user role, defaults to 'client'. Can be 'client' or 'admin'.
- *                 enum: [client, admin]
+ *                 enum:
+ *                   - client
+ *                   - admin
  *     responses:
  *       201:
  *         description: User registered successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: User registered successfully
+ *                 token:
+ *                   type: string
+ *                 user:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: integer
+ *                     username:
+ *                       type: string
+ *                     role:
+ *                       type: string
  *       400:
  *         description: Bad request
  *       500:
@@ -67,16 +90,8 @@ router.post('/register', async (req, res) => {
       .insert({ username, password: hashedPassword, role: userRole })
       .returning(['userid', 'username', 'role']);
 
-    // Generate JWT token
-    const token = jwt.sign(
-      { id: user.userid, username: user.username, role: user.role },
-      JWT_SECRET,
-      { expiresIn: '24h' }
-    );
-
     res.status(201).json({
       message: 'User registered successfully',
-      token,
       user: {
         id: user.userid,
         username: user.username,
@@ -117,7 +132,7 @@ router.post('/register', async (req, res) => {
  *       401:
  *         description: Access token required
  *       403:
- *         description: Forbidden: insufficient rights
+ *         description: "Forbidden: insufficient rights"
  *       404:
  *         description: User not found
  *       500:

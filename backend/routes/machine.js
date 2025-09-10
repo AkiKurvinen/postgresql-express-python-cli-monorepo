@@ -1,0 +1,131 @@
+const express = require('express');
+const router = express.Router();
+const db = require('../db');
+const { authenticateToken } = require('./auth');
+
+/**
+ * @swagger
+ * /machines/user/{user_id}:
+ *   get:
+ *     summary: Get all machines for a user
+ *     tags:
+ *       - Machines
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: user_id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: List of machines for the user
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   id:
+ *                     type: integer
+ *                   user_id:
+ *                     type: integer
+ *                   name:
+ *                     type: string
+ *                   registered_date:
+ *                     type: string
+ *                     format: date-time
+ *       401:
+ *         description: Access token required
+ *       403:
+ *         description: "Forbidden: insufficient rights"
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/machines/user/:user_id', authenticateToken, async (req, res) => {
+  const { user_id } = req.params;
+  try {
+    // Only allow access to own machines or if admin
+    if (parseInt(user_id) !== req.user.id && req.user.role !== 'admin') {
+      return res.status(403).json({ error: 'Forbidden: insufficient rights' });
+    }
+    const machines = await db('machines').where({ user_id });
+    res.json(machines);
+  } catch (error) {
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+/**
+ * @swagger
+ * /machines:
+ *   post:
+ *     summary: Add a new machine for a user
+ *     tags:
+ *       - Machines
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - user_id
+ *               - name
+ *             properties:
+ *               user_id:
+ *                 type: integer
+ *               name:
+ *                 type: string
+ *     responses:
+ *       201:
+ *         description: Machine added successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                 machine:
+ *                   type: object
+ *       400:
+ *         description: Bad request
+ *       401:
+ *         description: Access token required
+ *       403:
+ *         description: "Forbidden: insufficient rights"
+ *       500:
+ *         description: Internal server error
+ */
+router.post('/machines', authenticateToken, async (req, res) => {
+  try {
+    const { name, user_id } = req.body;
+    if (!name || !user_id) {
+      return res.status(400).json({ error: 'user_id and name are required' });
+    }
+    // Only allow admin or self to add machine
+    if (parseInt(user_id) !== req.user.id && req.user.role !== 'admin') {
+      return res.status(403).json({ error: 'Forbidden: insufficient rights' });
+    }
+    const [machine] = await db('machines')
+      .insert({
+        user_id,
+        name,
+        registered_date: new Date()
+      })
+      .returning(['id', 'user_id', 'name', 'registered_date']);
+    res.status(201).json({
+      message: 'Machine added successfully',
+      machine
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message || 'Internal server error' });
+  }
+});
+
+module.exports = router;

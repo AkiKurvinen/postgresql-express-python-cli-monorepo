@@ -28,6 +28,7 @@ Create .env file based on env-template
 
 ## Run Application
 ```bash
+python main.py --help
 python main.py status
 python main.py login
 python main.py profile
@@ -35,5 +36,6 @@ python main.py users add "anyusername" "anyuserpassword"
 python main.py users add "otherusername" "otheruserpassword" "admin"
 python main.py users del "anyusername"
 python main.py users del "otherusername"
+python main.py machines get 1
 python main.py logout
 ```

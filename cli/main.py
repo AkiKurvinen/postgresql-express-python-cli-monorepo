@@ -7,15 +7,19 @@ import requests
 from typing import Optional
 from pathlib import Path
 import json
-from dotenv import load_dotenv
 import os
+
+from dotenv import load_dotenv
+load_dotenv()
 
 app = typer.Typer()
 users_app = typer.Typer()
-load_dotenv()
+machines_app = typer.Typer()
+
 BASE_URL = os.getenv("API_URL", "http://localhost:3000")
 TOKEN_FILE = Path.home() / ".myapp" / "token.json"
 
+# Helpers
 def get_session_with_auth() -> tuple[requests.Session, Optional[str]]:
     """Get session with authentication if available"""
     session = requests.Session()
@@ -42,6 +46,19 @@ def save_token(token: str) -> None:
     with open(TOKEN_FILE, "w") as f:
         json.dump({"token": token}, f)
 
+# Basic commands
+@app.command()
+def status():
+    """Check that server is running"""
+    session = requests.Session()
+    try:
+        response = session.get(BASE_URL)
+        if response.status_code == 200:
+            typer.echo(response.json())
+        else:
+            typer.echo(f"❌ Status check failed: {response.status_code}", err=True)
+    except Exception as e:
+        typer.echo(f"❌ Error: {e}", err=True)
 @app.command()
 def login():
     """Login with username and password from .env"""
@@ -69,10 +86,26 @@ def login():
             typer.echo(f"❌ Login failed: {response.status_code}", err=True)
     except Exception as e:
         typer.echo(f"❌ Login error: {e}", err=True)
+@app.command()
+def logout():
+    """Logout user and delete token"""
+    session, token = get_session_with_auth()
+    if not token:
+        typer.echo("❌ Not logged in. Please run 'login' first.", err=True)
+        raise typer.Exit(1)
 
+    try:
+        response = session.post(f"{BASE_URL}/logout")
+        if response.status_code == 200:
+            TOKEN_FILE.unlink(missing_ok=True)
+            typer.echo("✅ Successfully logged out.")
+        else:
+            typer.echo(f"❌ Logout failed: {response.status_code}", err=True)
+    except Exception as e:
+        typer.echo(f"❌ Logout error: {e}", err=True)
 @app.command()
 def profile():
-    """Get user profile"""
+    """Get user profile info from token"""
     session, token = get_session_with_auth()
     
     if not token:
@@ -88,20 +121,6 @@ def profile():
             typer.echo(f"❌typer.echo('try login') Failed: {response.status_code}", err=True)
     except Exception as e:
         typer.echo(f"❌ Error: {e}", err=True)
-
-@app.command()
-def status():
-    """Check server status (GET /)"""
-    session = requests.Session()
-    try:
-        response = session.get(BASE_URL)
-        if response.status_code == 200:
-            typer.echo(response.json())
-        else:
-            typer.echo(f"❌ Status check failed: {response.status_code}", err=True)
-    except Exception as e:
-        typer.echo(f"❌ Error: {e}", err=True)
-
 
 # Users command group
 
@@ -130,8 +149,6 @@ def add_user(
     except Exception as e:
         typer.echo(f"❌ Error: {e}", err=True)
 
-app.add_typer(users_app, name="users")
-
 @users_app.command('del')
 def delete_user(username: str):
     """Delete a user by username"""
@@ -156,23 +173,60 @@ def delete_user(username: str):
             typer.echo(f"❌ Failed to delete user: {error}", err=True)
     except Exception as e:
         typer.echo(f"❌ Error: {e}", err=True)
-@app.command()
-def logout():
-    """Logout the user (POST /logout)"""
+
+# Machines command group
+@machines_app.command('get')
+def machines(user_id: int):
+    """Get all machines for a user id (authenticated)"""
     session, token = get_session_with_auth()
     if not token:
         typer.echo("❌ Not logged in. Please run 'login' first.", err=True)
         raise typer.Exit(1)
-
     try:
-        response = session.post(f"{BASE_URL}/logout")
+        url = f"{BASE_URL}/machines/user/{user_id}"
+        response = session.get(url)
         if response.status_code == 200:
-            TOKEN_FILE.unlink(missing_ok=True)
-            typer.echo("✅ Successfully logged out.")
+            machines = response.json()
+            if machines:
+                typer.echo(f"Machines for user {user_id}:")
+                for m in machines:
+                    typer.echo(f"- {m['id']}: {m['name']} (Registered: {m['registered_date']})")
+            else:
+                typer.echo(f"No machines found for user {user_id}.")
         else:
-            typer.echo(f"❌ Logout failed: {response.status_code}", err=True)
+            try:
+                error = response.json().get('error', response.text)
+            except Exception:
+                error = response.text
+            typer.echo(f"❌ Failed to fetch machines: {error}", err=True)
     except Exception as e:
-        typer.echo(f"❌ Logout error: {e}", err=True)
+        typer.echo(f"❌ Error: {e}", err=True)
+
+@machines_app.command('add')
+def add_machine(name: str, user_id: int):
+    """Add a new machine for a user"""
+    session, token = get_session_with_auth()
+    if not token:
+        typer.echo("❌ Not logged in. Please run 'login' first.", err=True)
+        raise typer.Exit(1)
+    payload = {"name": name, "user_id": user_id}
+    try:
+        response = session.post(f"{BASE_URL}/machines", json=payload)
+        if response.status_code == 201:
+            machine = response.json().get("machine")
+            typer.echo(f"✅ Machine '{name}' added for user {user_id}. ID: {machine.get('id')}")
+        else:
+            try:
+                error = response.json().get('error', response.text)
+            except Exception:
+                error = response.text
+            typer.echo(f"❌ Failed to add machine: {error}", err=True)
+    except Exception as e:
+        typer.echo(f"❌ Error: {e}", err=True)
+
+# Add sub apps
+app.add_typer(users_app, name="users", help="User management commands (add, del)")
+app.add_typer(machines_app, name="machines", help="Machine management commands (get, add)")
 
 if __name__ == "__main__":
     app(prog_name="main.py")
