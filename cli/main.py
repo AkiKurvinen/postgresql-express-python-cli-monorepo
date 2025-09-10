@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-from utils import BASE_URL, TOKEN_FILE, get_session_with_auth, save_token
+from utils import BASE_URL, get_session_with_auth, logout, save_token
 from users import users_app
 from machines import machines_app
 
@@ -78,23 +78,10 @@ def profile():
         typer.echo(f"❌ Error: {e}", err=True)
 
 
-@app.command()
-def logout():
+@app.command("logout")
+def logout_command():
     """Logout user and delete token"""
-    session, token = get_session_with_auth()
-    if not token:
-        typer.echo("❌ Not logged in. Please run 'login' first.", err=True)
-        raise typer.Exit(1)
-
-    try:
-        response = session.post(f"{BASE_URL}/logout")
-        if response.status_code == 200:
-            TOKEN_FILE.unlink(missing_ok=True)
-            typer.echo("✅ Successfully logged out.")
-        else:
-            typer.echo(f"❌ Logout failed: {response.status_code}", err=True)
-    except Exception as e:
-        typer.echo(f"❌ Logout error: {e}", err=True)
+    logout()
 
 
 # Add sub apps

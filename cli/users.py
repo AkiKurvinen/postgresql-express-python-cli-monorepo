@@ -1,9 +1,11 @@
 from typing import Optional
 import typer
 import os
+import requests
 
 users_app = typer.Typer()
 from utils import BASE_URL, get_session_with_auth
+from utils import logout
 
 # Users command group
 
@@ -16,7 +18,7 @@ def add_user(username: str, password: str, role: Optional[str] = typer.Argument(
     if role:
         payload["role"] = role
     try:
-        response = session.post(f"{BASE_URL}/register", json=payload)
+        response = session.put(f"{BASE_URL}/users", json=payload)
         if response.status_code == 201:
             data = response.json()
             typer.echo(
@@ -54,5 +56,28 @@ def delete_user(username: str):
             except Exception:
                 error = response.text
             typer.echo(f"❌ Failed to delete user: {error}", err=True)
+    except Exception as e:
+        typer.echo(f"❌ Error: {e}", err=True)
+
+
+@users_app.command("all")
+def list_all_users():
+    """List all users"""
+    try:
+        response = requests.get(f"{BASE_URL}/users")
+        if response.status_code == 200:
+            users = response.json()
+            if users:
+                typer.echo("All users:")
+                for user in users:
+                    typer.echo(f"- {user['userid']}: {user['username']} (Role: {user['role']})")
+            else:
+                typer.echo("No users found.")
+        else:
+            try:
+                error = response.json().get('error', response.text)
+            except Exception:
+                error = response.text
+            typer.echo(f"❌ Failed to fetch users: {error}", err=True)
     except Exception as e:
         typer.echo(f"❌ Error: {e}", err=True)

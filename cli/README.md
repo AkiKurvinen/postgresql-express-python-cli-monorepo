@@ -39,3 +39,8 @@ python main.py users del "otherusername"
 python main.py machines get 1
 python main.py logout
 ```
+
+## Code formatting
+```bash
+black .
+```
