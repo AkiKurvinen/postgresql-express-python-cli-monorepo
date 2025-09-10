@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
-const { authenticateToken } = require('./auth'); 
+const db = require('../db');
+const { authenticateToken } = require('./auth');
 
 /**
  * @swagger
@@ -39,7 +40,7 @@ const { authenticateToken } = require('./auth');
  *       401:
  *         description: Access token required
  *       403:
- *         description: Forbidden: insufficient rights
+ *         description: "Forbidden: insufficient rights"
  *       500:
  *         description: Internal server error
  */

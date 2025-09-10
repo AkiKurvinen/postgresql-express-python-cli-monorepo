@@ -40,6 +40,7 @@ const swaggerOptions = {
 		path.join(__dirname, 'auth.js'),
 		path.join(__dirname, 'user.js'),
 		path.join(__dirname, 'health.js'),
+		path.join(__dirname, 'machine.js'),
 		path.join(__filename)
 	],
 };

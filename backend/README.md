@@ -1,5 +1,5 @@
 
-# Example node server
+# Example Node server
 
 ## Installation
 ```bash
@@ -7,6 +7,9 @@ cd backend
 npm install
 npm start
 ```
+
+## API docs (Swagger)
+http://localhost:3000/api/v1/api-docs  
 
 ## Usage Examples
 

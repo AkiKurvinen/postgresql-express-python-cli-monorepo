@@ -1,6 +1,8 @@
 const express = require('express');
 const router = express.Router();
-const { authenticateToken } = require('./auth'); 
+const db = require('../db');
+const bcrypt = require('bcrypt');
+const { authenticateToken } = require('./auth');
 /**
  * @swagger
  * /register:
@@ -88,16 +90,8 @@ router.post('/register', async (req, res) => {
       .insert({ username, password: hashedPassword, role: userRole })
       .returning(['userid', 'username', 'role']);
 
-    // Generate JWT token
-    const token = jwt.sign(
-      { id: user.userid, username: user.username, role: user.role },
-      JWT_SECRET,
-      { expiresIn: '24h' }
-    );
-
     res.status(201).json({
       message: 'User registered successfully',
-      token,
       user: {
         id: user.userid,
         username: user.username,
@@ -138,7 +132,7 @@ router.post('/register', async (req, res) => {
  *       401:
  *         description: Access token required
  *       403:
- *         description: Forbidden: insufficient rights
+ *         description: "Forbidden: insufficient rights"
  *       404:
  *         description: User not found
  *       500:
