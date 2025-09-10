@@ -1,49 +1,21 @@
 # Database
 
 ## Installation
-*A. Container & pgAdmin*  
+*Dcoker Container with pgAdmin*  
 ```bash
 cd database
 npm install
 docker-compose up -d
+npx knex migrate:rollback --all
 npx knex migrate:latest
 npx knex seed:run
 ```
-
-*B. sqlite*
-```bash
-cd database
-npm install
-npm install sqlite3
-npx knex init
-npx knex migrate:latest
-npx knex seed:run
-```
-Edit knexfile.js
-```
-  development: {
-    client: 'sqlite3',
-    connection: {
-      filename: '../database/dev.sqlite3'
-    }
-  },
-```
-
-## Browse database in SQLite
-*A. Use SQLite VS Code extension*
-```
-Ctrl + Shift + P  
->SQLite: Open database
->Explorer: Focus on SQLite Explorer View  
-Choose table and click arrow to send SELECT query  
-```
-*B. Install SQLite from sqlite.org and use command line*
 
 ## Browse database in pgAdmin
 - Open your browser and go to http://localhost:5050/
 - Log in with the default credentials:
   - See email and password in [docker-compose.yml](docker-compose.yml)
-- Click "Add New Server".
+- Click "Add New Server"
 - In the "General" tab, enter a name (e.g., postgres).
 - Go to the "Connection" tab and fill in:
   - Host name/address: db
