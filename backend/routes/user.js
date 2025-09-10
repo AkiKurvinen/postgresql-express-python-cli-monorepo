@@ -28,10 +28,31 @@ const { authenticateToken } = require('./auth');
  *               role:
  *                 type: string
  *                 description: Optional user role, defaults to 'client'. Can be 'client' or 'admin'.
- *                 enum: [client, admin]
+ *                 enum:
+ *                   - client
+ *                   - admin
  *     responses:
  *       201:
  *         description: User registered successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: User registered successfully
+ *                 token:
+ *                   type: string
+ *                 user:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: integer
+ *                     username:
+ *                       type: string
+ *                     role:
+ *                       type: string
  *       400:
  *         description: Bad request
  *       500:
