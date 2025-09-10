@@ -7,6 +7,7 @@ const swaggerUi = require('swagger-ui-express');
 // Import sub-routes
 const statusRoute = require('./status');
 const authRoute = require('./auth');
+const userRoutes = require('./user');
 
 // Swagger configuration
 
@@ -36,6 +37,7 @@ const swaggerOptions = {
 	},
 	apis: [
 		path.join(__dirname, 'auth.js'),
+		path.join(__dirname, 'user.js'),
 		path.join(__dirname, 'health.js'),
 		path.join(__filename)
 	],
@@ -47,6 +49,7 @@ router.use(express.json());
 
 // Mount sub-routes
 router.use('/status', statusRoute);
+router.use('/', userRoutes);
 router.use('/', authRoute);
 
 // Root route
