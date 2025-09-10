@@ -1,15 +1,53 @@
+/**
+ * @swagger
+ * /users:
+ *   get:
+ *     summary: List all users
+ *     tags:
+ *       - Users
+ *     description: Returns a list of all users. No authentication required.
+ *     responses:
+ *       200:
+ *         description: A list of users
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   userid:
+ *                     type: integer
+ *                   username:
+ *                     type: string
+ *                   role:
+ *                     type: string
+ *       500:
+ *         description: Internal server error
+ */
 const express = require('express');
 const router = express.Router();
 const db = require('../db');
 const bcrypt = require('bcrypt');
 const { authenticateToken } = require('./auth');
+
+
+router.get('/users', async (req, res) => {
+  try {
+    const users = await db('users').select('userid', 'username', 'role');
+    res.json(users);
+  } catch (error) {
+    res.status(500).json({ error: error.message || 'Internal server error' });
+  }
+});
+
 /**
  * @swagger
- * /register:
- *   post:
+ * /users:
+ *   put:
  *     summary: Register a new user
  *     tags:
- *       - Auth
+ *       - Users
  *     requestBody:
  *       required: true
  *       content:
@@ -60,7 +98,7 @@ const { authenticateToken } = require('./auth');
  *       500:
  *         description: Internal server error
  */
-router.post('/register', async (req, res) => {
+router.put('/users', async (req, res) => {
   try {
     const { username, password, role } = req.body;
 
@@ -109,7 +147,7 @@ router.post('/register', async (req, res) => {
  *   delete:
  *     summary: Delete a user by username
  *     tags:
- *       - Auth
+ *       - Users
  *     security:
  *       - bearerAuth: []
  *     parameters:
