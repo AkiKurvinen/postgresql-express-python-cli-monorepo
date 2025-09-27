@@ -6,7 +6,6 @@
 cd database
 npm install
 docker-compose up -d
-npx knex migrate:rollback --all
 npx knex migrate:latest
 npx knex seed:run
 ```
