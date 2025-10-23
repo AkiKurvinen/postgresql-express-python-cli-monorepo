@@ -128,4 +128,59 @@ router.post('/machines', authenticateToken, async (req, res) => {
   }
 });
 
+
+
+/**
+ * @swagger
+ * /machines/{name}:
+ *   delete:
+ *     summary: Delete a machine by name
+ *     tags:
+ *       - Machines
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: name
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Machine deleted successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *       401:
+ *         description: Access token required
+ *       403:
+ *         description: "Forbidden: insufficient rights"
+ *       404:
+ *         description: Machine not found
+ *       500:
+ *         description: Internal server error
+ */
+router.delete('/machines/:name', authenticateToken, async (req, res) => {
+  const { name } = req.params;
+  try {
+    // Find the machine by name
+    const machine = await db('machines').where({ name }).first();
+    if (!machine) {
+      return res.status(404).json({ error: 'Machine not found' });
+    }
+    // Only allow owner or admin to delete
+    if (machine.user_id !== req.user.id && req.user.role !== 'admin') {
+      return res.status(403).json({ error: 'Forbidden: insufficient rights' });
+    }
+    await db('machines').where({ name }).del();
+    res.json({ message: 'Machine deleted successfully' });
+  } catch (error) {
+    res.status(500).json({ error: error.message || 'Internal server error' });
+  }
+});
+
 module.exports = router;
