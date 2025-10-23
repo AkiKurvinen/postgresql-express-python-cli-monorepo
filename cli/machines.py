@@ -59,3 +59,21 @@ def add_machine(name: str, user_id: int):
             typer.echo(f"❌ Failed to add machine: {error}", err=True)
     except Exception as e:
         typer.echo(f"❌ Error: {e}", err=True)
+
+@machines_app.command("del")
+def delete_machine(machine_name: str):
+    """Delete a machine by name"""
+    session, token = get_session_with_auth()
+    if not token:
+        typer.echo("❌ Not logged in. Please run 'login' first.", err=True)
+        raise typer.Exit(1)
+
+    response = session.delete(f"{BASE_URL}/machines/{machine_name}")
+    if response.status_code == 200:
+        typer.echo(f"✅ Machine '{machine_name}' deleted successfully.")
+    else:
+        try:
+            error = response.json().get("error", response.text)
+        except Exception:
+            error = response.text
+        typer.echo(f"❌ Failed to delete machine: {error}", err=True)

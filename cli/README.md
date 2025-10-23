@@ -34,8 +34,13 @@ python main.py login
 python main.py profile
 python main.py users add "anyusername" "anyuserpassword"
 python main.py users add "otherusername" "otheruserpassword" "admin"
+python main.py users all
 python main.py users del "anyusername"
 python main.py users del "otherusername"
+python main.py users all
+python main.py machines add "anymachine" 1
+python main.py machines get 1
+python main.py machines del "anymachine"
 python main.py machines get 1
 python main.py logout
 ```
